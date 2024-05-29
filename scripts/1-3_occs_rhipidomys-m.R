@@ -1,76 +1,76 @@
-#2. Dados de ocorrencia: NECTOMYS SQUAMIPES ----
+#2. Dados de ocorrencia: Rhipidomys mastacalis ----
 
 # Importando dados da GBIF ----
-necto_occ_spocc <- spocc::occ(query = "Nectomys squamipes",
+rhipi_occ_spocc <- spocc::occ(query = "Rhipidomys mastacalis",
                               from = c("gbif"),
                               has_coords = TRUE,
                               limit = 1e5)
-necto_occ_spocc
+rhipi_occ_spocc
 
 # tratamento e selecao dos dados de localizacao
-necto_occ_spocc_data <- spocc::occ2df(necto_occ_spocc) %>%
-  dplyr::mutate(species = "Nectomys squamipes",
+rhipi_occ_spocc_data <- spocc::occ2df(rhipi_occ_spocc) %>%
+  dplyr::mutate(species = "Rhipidomys mastacalis",
                 longitude = as.numeric(longitude),
                 latitude = as.numeric(latitude),
                 year = date %>% lubridate::year(),
                 base = prov %>% stringr::str_to_lower()) %>%
   dplyr::select(name, species, longitude, latitude, year, base)
-necto_occ_spocc_data
+rhipi_occ_spocc_data
 
 # Importando dados tratados manualmente ----
-necto_occ_manual <- read.csv("data/occs/pre_R/necto_asm.csv") %>% 
+rhipi_occ_manual <- read.csv("data/occs/pre_R/rhipi_asm.csv") %>% 
   dplyr::mutate(longitude = as.numeric(longitude),
                 latitude = as.numeric(latitude),
                 year = as.numeric(year)) %>%
   dplyr::select(species, longitude, latitude, year, base) %>% 
   as_tibble()
-necto_occ_manual
+rhipi_occ_manual
 
 # Combinando datasets ----
-necto_occ_data <- dplyr::bind_rows(necto_occ_spocc_data, 
-                                   necto_occ_manual)
-necto_occ_data
+rhipi_occ_data <- dplyr::bind_rows(rhipi_occ_spocc_data, 
+                                   rhipi_occ_manual)
+rhipi_occ_data
 
 # Visualizando no mapa ----
-necto_occ_data_vector <- necto_occ_data %>%
+rhipi_occ_data_vector <- rhipi_occ_data %>%
   tidyr::drop_na(longitude, latitude) %>%
   dplyr::mutate(lon = longitude, lat = latitude) %>%
   dplyr::filter(lon >= -180, lon <= 180, lat >= -90, lat <= 90) %>%
   sf::st_as_sf(coords = c("lon", "lat"), crs = 4326)
-necto_occ_data_vector
+rhipi_occ_data_vector
 
-tm_shape(ma, bbox = necto_occ_data_vector) +
+tm_shape(ma, bbox = rhipi_occ_data_vector) +
   tm_polygons() +
-  tm_shape(necto_occ_data_vector) +
-  tm_dots(size = .15, shape = 21, col = "steelblue") +
+  tm_shape(rhipi_occ_data_vector) +
+  tm_dots(size = .1, shape = 21, col = "gold3") +
   tm_graticules(lines = FALSE)
 
 # Filtro espacial ----
 
 # Importar limites de distribuicao atual
-ns_shape <- read_sf(dsn = "data/shapes/Nectomys-squamipes/data/Nectomys_squamipes.shp", layer = "Nectomys_squamipes")
-ns_shape
-tm_shape(ns_shape) +
+rm_shape <- read_sf(dsn = "data/shapes/Rhipidomys-mastacalis/data/Rhipidomys_mastacalis.shp", layer = "Rhipidomys_mastacalis")
+rm_shape
+tm_shape(rm_shape) +
   tm_polygons()
 
-# Recortar ocorrencias de acordo com a Mata Atlantica e coma  distribuicao atual
+# Recortar ocorrencias de acordo com a Mata Atlantica e com a distribuicao atual
 ## Este comando adiciona uma nova coluna indicando se a coordenada esta dentro ou fora do limite
-necto_occ_data_sptlim <- necto_occ_data_vector %>%
-  dplyr::mutate(sptlim_filter = as.logical(sf::st_intersects(necto_occ_data_vector, ma, sparse = FALSE)),
-                distlim_filter = as.logical(sf::st_intersects(necto_occ_data_vector, ns_shape, sparse = FALSE)))
-necto_occ_data_sptlim
+rhipi_occ_data_sptlim <- rhipi_occ_data_vector %>%
+  dplyr::mutate(sptlim_filter = as.logical(sf::st_intersects(rhipi_occ_data_vector, ma, sparse = FALSE)),
+                distlim_filter = as.logical(sf::st_intersects(rhipi_occ_data_vector, rm_shape, sparse = FALSE)))
+rhipi_occ_data_sptlim
 
 # Visualizando no mapa
 tm_shape(ma) +
   tm_polygons() +
-  tm_shape(necto_occ_data_sptlim %>%
+  tm_shape(rhipi_occ_data_sptlim %>%
              filter(sptlim_filter == TRUE,
                     distlim_filter == TRUE)) +
-  tm_dots(size = .05, shape = 21, col = "turquoise")
+  tm_dots(size = .15, shape = 21, col = "gold3")
 
 # Filtrando vieses ----
-necto_occ_data_sptlim_bias <- CoordinateCleaner::clean_coordinates(
-  x = sf::st_drop_geometry(necto_occ_data_sptlim),
+rhipi_occ_data_sptlim_bias <- CoordinateCleaner::clean_coordinates(
+  x = sf::st_drop_geometry(rhipi_occ_data_sptlim),
   species = "species",
   lon = "longitude",
   lat = "latitude",
@@ -85,22 +85,22 @@ necto_occ_data_sptlim_bias <- CoordinateCleaner::clean_coordinates(
   tibble::as_tibble() %>%
   dplyr::mutate(lon = longitude, lat = latitude) %>%
   sf::st_as_sf(coords = c("lon", "lat"), crs = 4326)
-necto_occ_data_sptlim_bias # tibble com os status de cada coordenada de acordo com os limites considerados
+rhipi_occ_data_sptlim_bias # tibble com os status de cada coordenada de acordo com os limites considerados
 
 # Visualizando no mapa
 ## mapa bem parecido com o anterior pq pontos estao aglomerados.
 ## dica: diminuir o tamanho dos pontos e dar zoom no mapa.
-### e possivel ver a diferenca de pontos entre esse e o mapa anterior.
+## eh possivel ver a diferenca de pontos entre esse e o mapa anterior.
 tm_shape(ma) +
   tm_polygons() +
-  tm_shape(necto_occ_data_sptlim_bias %>%
+  tm_shape(rhipi_occ_data_sptlim_bias %>%
              filter(sptlim_filter == TRUE,
                     distlim_filter == TRUE,
                     .summary == TRUE)) +
-  tm_dots(size = .1, shape = 21, col = "turquoise")
+  tm_dots(size = .1, shape = 21, col = "gold3")
 
 # Distancia minima entre os pontos ----
-filter_thin <- spThin::thin(loc.data = necto_occ_data_sptlim_bias,
+filter_thin <- spThin::thin(loc.data = rhipi_occ_data_sptlim_bias,
                             lat.col = "latitude",
                             long.col = "longitude",
                             spec.col = "species",
@@ -117,48 +117,48 @@ filter_thin <- spThin::thin(loc.data = necto_occ_data_sptlim_bias,
 filter_thin
 
 # Juntar os filtros
-necto_occ_data_sptlim_bias_sptdist <- dplyr::left_join(
-  x = necto_occ_data_sptlim_bias,
+rhipi_occ_data_sptlim_bias_sptdist <- dplyr::left_join(
+  x = rhipi_occ_data_sptlim_bias,
   y = filter_thin,
   by = c("longitude", "latitude")) %>%
   dplyr::mutate(sptdist_filter = replace_na(sptdist_filter, FALSE)) #%>%
-# dplyr::relocate(sptdist_filter, .after = date_filter)
-necto_occ_data_sptlim_bias_sptdist
+# dplyr::relocate(sptdist_filter, .after = distlim_filter)
+rhipi_occ_data_sptlim_bias_sptdist
 
 tm_shape(ma) +
   tm_polygons() +
-  tm_shape(necto_occ_data_sptlim_bias_sptdist %>%
+  tm_shape(rhipi_occ_data_sptlim_bias_sptdist %>%
              filter(sptlim_filter == TRUE,
                     distlim_filter == TRUE,
                     sptdist_filter == TRUE,
                     .summary == TRUE)) +
-  tm_dots(size = .1, shape = 21, col = "turquoise")
+  tm_dots(size = .1, shape = 21, col = "gold3")
 
 # Aplicar todos os filtros ----
 ## aqui e criada uma nova tabela, sem as occs que caem em algum filtro
-necto_occ_data_filter <- necto_occ_data_sptlim_bias_sptdist %>%
+rhipi_occ_data_filter <- rhipi_occ_data_sptlim_bias_sptdist %>%
   filter(sptlim_filter == TRUE,
          distlim_filter == TRUE,
          sptdist_filter == TRUE,
          .summary == TRUE) %>%
   dplyr::select(species, longitude, latitude) #essa linha seleciona quais cols ficam
-necto_occ_data_filter
+rhipi_occ_data_filter
 
-mapview::mapview(necto_occ_data_filter)
+mapview::mapview(rhipi_occ_data_filter)
 
 # manual editing ----
-#necto_occ_data_filter_edit <- mapedit::editFeatures(necto_occ_data_filter) # atencao para o Done!
-necto_occ_data_filter_edit <- necto_occ_data_filter
+#rhipi_occ_data_filter_edit <- mapedit::editFeatures(rhipi_occ_data_filter) # atencao para o Done!
+rhipi_occ_data_filter_edit <- rhipi_occ_data_filter
 
 # verificar
-mapview::mapview(necto_occ_data_filter_edit)
+mapview::mapview(rhipi_occ_data_filter_edit)
 
 # export ----
 # vetor
-necto_occ_data_filter_edit %>%
-  sf::st_write("data/occs/necto.shp", append=F)
+rhipi_occ_data_filter_edit %>%
+  sf::st_write("data/occs/rhipi.shp", append=F)
 
 # tabela
-necto_occ_data_filter_edit %>%
+rhipi_occ_data_filter_edit %>%
   sf::st_drop_geometry() %>%
-  readr::write_csv("data/occs/necto_filtrado.csv")
+  readr::write_csv("data/occs/rhipi_filtrado.csv")
