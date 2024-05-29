@@ -1,45 +1,44 @@
-#2. Variaveis ----
+#2. ENVIRONMENTAL VARIABLES ----
 
-# Baixar
+# Download
 env <- geodata::worldclim_global(var = "bio", res = 10, path = "data/vars/00_raw")
 
-# Renomear
+# Rename
 names(env) <-  c("bio01", paste0("bio", 10:19), paste0("bio0", 2:9))
 env
 
-# Plot da variavel bio01 para conferir se está ok
+# Plot variable bio01 to check if it is ok
 plot(env$bio01)
 
-# Tamanho e resolucao ----
-# Ajuste de tamanho e resolucao
+# Size and resolution ----
+# Adjusting size and resolution
 env_ma <- env %>%
   raster::crop(ma) %>%
   raster::mask(ma) #%>%
-#  raster::aggregate(fact = .5/res(env)[1]) # dimuindo a resolucao para visualizar
+#  raster::aggregate(fact = .5/res(env)[1]) # reducing resolution for visualization
 plot(env_ma)
 
-# Salvando o raster cortado para a MA
-#writeRaster(env_ma, "env_ma.tif", format='GTiff', overwrite=T) # corrigir depois
+# Saving the raster cropped to MA
+#writeRaster(env_ma, "env_ma.tif", format='GTiff', overwrite=T) # fix later
 
-# Importar o raster ja recortado
-
+# Importing the already cropped raster
 env_ma <- dir(path = "data/vars/ma_cut", pattern = ".tif$", full.names = TRUE) %>%
   raster::stack() %>%
   raster::brick()
 
-# plot de uma variavel para conferir se o corte foi bem feito
+# plot a variable to check if the crop was well done
 tm_shape(env_ma$env_ma_1) +
   tm_raster(palette = "-RdBu", n = 10) +
   tm_shape(ma) +
   tm_borders(col = "black") +
   tm_layout(legend.position = c("right", "bottom"))
 
-# Colinearidade ----
-# correlacao
+# Collinearity ----
+# correlation
 ENMTools::raster.cor.matrix(env_ma, method = "pearson")
 ENMTools::raster.cor.plot(env_ma)
 
-# Raster como data frame
+# Raster as a data frame
 env_ma_df <- as.data.frame(env_ma)
 
 # vif

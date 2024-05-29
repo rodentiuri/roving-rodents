@@ -1,13 +1,13 @@
-#2. Dados de ocorrencia: Rhipidomys mastacalis ----
+#1-3. Occurrence data: RHIPIDOMYS MASTACALIS ----
 
-# Importando dados da GBIF ----
+# Importing data from GBIF ----
 rhipi_occ_spocc <- spocc::occ(query = "Rhipidomys mastacalis",
                               from = c("gbif"),
                               has_coords = TRUE,
                               limit = 1e5)
 rhipi_occ_spocc
 
-# tratamento e selecao dos dados de localizacao
+# Processing and selecting location data
 rhipi_occ_spocc_data <- spocc::occ2df(rhipi_occ_spocc) %>%
   dplyr::mutate(species = "Rhipidomys mastacalis",
                 longitude = as.numeric(longitude),
@@ -17,7 +17,7 @@ rhipi_occ_spocc_data <- spocc::occ2df(rhipi_occ_spocc) %>%
   dplyr::select(name, species, longitude, latitude, year, base)
 rhipi_occ_spocc_data
 
-# Importando dados tratados manualmente ----
+# Importing manually processed data ----
 rhipi_occ_manual <- read.csv("data/occs/pre_R/rhipi_asm.csv") %>% 
   dplyr::mutate(longitude = as.numeric(longitude),
                 latitude = as.numeric(latitude),
@@ -26,12 +26,12 @@ rhipi_occ_manual <- read.csv("data/occs/pre_R/rhipi_asm.csv") %>%
   as_tibble()
 rhipi_occ_manual
 
-# Combinando datasets ----
+# Combining datasets ----
 rhipi_occ_data <- dplyr::bind_rows(rhipi_occ_spocc_data, 
                                    rhipi_occ_manual)
 rhipi_occ_data
 
-# Visualizando no mapa ----
+# Visualizing on the map ----
 rhipi_occ_data_vector <- rhipi_occ_data %>%
   tidyr::drop_na(longitude, latitude) %>%
   dplyr::mutate(lon = longitude, lat = latitude) %>%
@@ -45,22 +45,22 @@ tm_shape(ma, bbox = rhipi_occ_data_vector) +
   tm_dots(size = .1, shape = 21, col = "gold3") +
   tm_graticules(lines = FALSE)
 
-# Filtro espacial ----
+# Spatial filter ----
 
-# Importar limites de distribuicao atual
+# Import current distribution boundaries
 rm_shape <- read_sf(dsn = "data/shapes/Rhipidomys-mastacalis/data/Rhipidomys_mastacalis.shp", layer = "Rhipidomys_mastacalis")
 rm_shape
 tm_shape(rm_shape) +
   tm_polygons()
 
-# Recortar ocorrencias de acordo com a Mata Atlantica e com a distribuicao atual
-## Este comando adiciona uma nova coluna indicando se a coordenada esta dentro ou fora do limite
+# Clip occurrences according to the Atlantic Forest and the current distribution
+## This command adds a new column indicating whether the coordinate is inside or outside the boundary
 rhipi_occ_data_sptlim <- rhipi_occ_data_vector %>%
   dplyr::mutate(sptlim_filter = as.logical(sf::st_intersects(rhipi_occ_data_vector, ma, sparse = FALSE)),
                 distlim_filter = as.logical(sf::st_intersects(rhipi_occ_data_vector, rm_shape, sparse = FALSE)))
 rhipi_occ_data_sptlim
 
-# Visualizando no mapa
+# Visualizing on the map
 tm_shape(ma) +
   tm_polygons() +
   tm_shape(rhipi_occ_data_sptlim %>%
@@ -68,7 +68,7 @@ tm_shape(ma) +
                     distlim_filter == TRUE)) +
   tm_dots(size = .15, shape = 21, col = "gold3")
 
-# Filtrando vieses ----
+# Filtering biases ----
 rhipi_occ_data_sptlim_bias <- CoordinateCleaner::clean_coordinates(
   x = sf::st_drop_geometry(rhipi_occ_data_sptlim),
   species = "species",
@@ -85,12 +85,12 @@ rhipi_occ_data_sptlim_bias <- CoordinateCleaner::clean_coordinates(
   tibble::as_tibble() %>%
   dplyr::mutate(lon = longitude, lat = latitude) %>%
   sf::st_as_sf(coords = c("lon", "lat"), crs = 4326)
-rhipi_occ_data_sptlim_bias # tibble com os status de cada coordenada de acordo com os limites considerados
+rhipi_occ_data_sptlim_bias # tibble with the status of each coordinate according to the limits considered
 
-# Visualizando no mapa
-## mapa bem parecido com o anterior pq pontos estao aglomerados.
-## dica: diminuir o tamanho dos pontos e dar zoom no mapa.
-## eh possivel ver a diferenca de pontos entre esse e o mapa anterior.
+# Visualizing on the map
+## map very similar to the previous one because points are clustered.
+## tip: reduce the size of the points and zoom in on the map.
+## it is possible to see the difference in points between this and the previous map.
 tm_shape(ma) +
   tm_polygons() +
   tm_shape(rhipi_occ_data_sptlim_bias %>%
@@ -99,12 +99,12 @@ tm_shape(ma) +
                     .summary == TRUE)) +
   tm_dots(size = .1, shape = 21, col = "gold3")
 
-# Distancia minima entre os pontos ----
+# Minimum distance between points ----
 filter_thin <- spThin::thin(loc.data = rhipi_occ_data_sptlim_bias,
                             lat.col = "latitude",
                             long.col = "longitude",
                             spec.col = "species",
-                            thin.par = 5, # tem que justificar - unidade = km
+                            thin.par = 5, # must be justified - unit = km
                             reps = 1,
                             write.files = FALSE,
                             write.log.file = FALSE,
@@ -116,7 +116,7 @@ filter_thin <- spThin::thin(loc.data = rhipi_occ_data_sptlim_bias,
   dplyr::mutate(sptdist_filter = TRUE)
 filter_thin
 
-# Juntar os filtros
+# Combining filters
 rhipi_occ_data_sptlim_bias_sptdist <- dplyr::left_join(
   x = rhipi_occ_data_sptlim_bias,
   y = filter_thin,
@@ -134,31 +134,31 @@ tm_shape(ma) +
                     .summary == TRUE)) +
   tm_dots(size = .1, shape = 21, col = "gold3")
 
-# Aplicar todos os filtros ----
-## aqui e criada uma nova tabela, sem as occs que caem em algum filtro
+# Applying all filters ----
+## here a new table is created, without the occurrences that fall into any filter
 rhipi_occ_data_filter <- rhipi_occ_data_sptlim_bias_sptdist %>%
   filter(sptlim_filter == TRUE,
          distlim_filter == TRUE,
          sptdist_filter == TRUE,
          .summary == TRUE) %>%
-  dplyr::select(species, longitude, latitude) #essa linha seleciona quais cols ficam
+  dplyr::select(species, longitude, latitude) #this line selects which columns remain
 rhipi_occ_data_filter
 
 mapview::mapview(rhipi_occ_data_filter)
 
 # manual editing ----
-#rhipi_occ_data_filter_edit <- mapedit::editFeatures(rhipi_occ_data_filter) # atencao para o Done!
+#rhipi_occ_data_filter_edit <- mapedit::editFeatures(rhipi_occ_data_filter) # attention to the Done!
 rhipi_occ_data_filter_edit <- rhipi_occ_data_filter
 
-# verificar
+# check
 mapview::mapview(rhipi_occ_data_filter_edit)
 
 # export ----
-# vetor
+# vector
 rhipi_occ_data_filter_edit %>%
   sf::st_write("data/occs/rhipi.shp", append=F)
 
-# tabela
+# table
 rhipi_occ_data_filter_edit %>%
   sf::st_drop_geometry() %>%
   readr::write_csv("data/occs/rhipi_filtrado.csv")

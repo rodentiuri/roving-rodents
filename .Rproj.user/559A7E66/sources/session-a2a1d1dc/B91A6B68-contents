@@ -1,13 +1,13 @@
-#2. Dados de ocorrencia: NECTOMYS SQUAMIPES ----
+#1-2. Occurrence data: NECTOMYS SQUAMIPES ----
 
-# Importando dados da GBIF ----
+# Importing data from GBIF ----
 necto_occ_spocc <- spocc::occ(query = "Nectomys squamipes",
                               from = c("gbif"),
                               has_coords = TRUE,
                               limit = 1e5)
 necto_occ_spocc
 
-# tratamento e selecao dos dados de localizacao
+# Processing and selecting location data
 necto_occ_spocc_data <- spocc::occ2df(necto_occ_spocc) %>%
   dplyr::mutate(species = "Nectomys squamipes",
                 longitude = as.numeric(longitude),
@@ -17,7 +17,7 @@ necto_occ_spocc_data <- spocc::occ2df(necto_occ_spocc) %>%
   dplyr::select(name, species, longitude, latitude, year, base)
 necto_occ_spocc_data
 
-# Importando dados tratados manualmente ----
+# Importing manually processed data ----
 necto_occ_manual <- read.csv("data/occs/pre_R/necto_asm.csv") %>% 
   dplyr::mutate(longitude = as.numeric(longitude),
                 latitude = as.numeric(latitude),
@@ -26,12 +26,12 @@ necto_occ_manual <- read.csv("data/occs/pre_R/necto_asm.csv") %>%
   as_tibble()
 necto_occ_manual
 
-# Combinando datasets ----
+# Combining datasets ----
 necto_occ_data <- dplyr::bind_rows(necto_occ_spocc_data, 
                                    necto_occ_manual)
 necto_occ_data
 
-# Visualizando no mapa ----
+# Visualizing on the map ----
 necto_occ_data_vector <- necto_occ_data %>%
   tidyr::drop_na(longitude, latitude) %>%
   dplyr::mutate(lon = longitude, lat = latitude) %>%
@@ -45,22 +45,22 @@ tm_shape(ma, bbox = necto_occ_data_vector) +
   tm_dots(size = .15, shape = 21, col = "steelblue") +
   tm_graticules(lines = FALSE)
 
-# Filtro espacial ----
+# Spatial filter ----
 
-# Importar limites de distribuicao atual
+# Import current distribution boundaries
 ns_shape <- read_sf(dsn = "data/shapes/Nectomys-squamipes/data/Nectomys_squamipes.shp", layer = "Nectomys_squamipes")
 ns_shape
 tm_shape(ns_shape) +
   tm_polygons()
 
-# Recortar ocorrencias de acordo com a Mata Atlantica e coma  distribuicao atual
-## Este comando adiciona uma nova coluna indicando se a coordenada esta dentro ou fora do limite
+# Clip occurrences according to the Atlantic Forest and the current distribution
+## This command adds a new column indicating whether the coordinate is inside or outside the boundary
 necto_occ_data_sptlim <- necto_occ_data_vector %>%
   dplyr::mutate(sptlim_filter = as.logical(sf::st_intersects(necto_occ_data_vector, ma, sparse = FALSE)),
                 distlim_filter = as.logical(sf::st_intersects(necto_occ_data_vector, ns_shape, sparse = FALSE)))
 necto_occ_data_sptlim
 
-# Visualizando no mapa
+# Visualizing on the map
 tm_shape(ma) +
   tm_polygons() +
   tm_shape(necto_occ_data_sptlim %>%
@@ -68,7 +68,7 @@ tm_shape(ma) +
                     distlim_filter == TRUE)) +
   tm_dots(size = .05, shape = 21, col = "turquoise")
 
-# Filtrando vieses ----
+# Filtering biases ----
 necto_occ_data_sptlim_bias <- CoordinateCleaner::clean_coordinates(
   x = sf::st_drop_geometry(necto_occ_data_sptlim),
   species = "species",
@@ -85,12 +85,12 @@ necto_occ_data_sptlim_bias <- CoordinateCleaner::clean_coordinates(
   tibble::as_tibble() %>%
   dplyr::mutate(lon = longitude, lat = latitude) %>%
   sf::st_as_sf(coords = c("lon", "lat"), crs = 4326)
-necto_occ_data_sptlim_bias # tibble com os status de cada coordenada de acordo com os limites considerados
+necto_occ_data_sptlim_bias # tibble with the status of each coordinate according to the limits considered
 
-# Visualizando no mapa
-## mapa bem parecido com o anterior pq pontos estao aglomerados.
-## dica: diminuir o tamanho dos pontos e dar zoom no mapa.
-### e possivel ver a diferenca de pontos entre esse e o mapa anterior.
+# Visualizing on the map
+## map very similar to the previous one because points are clustered.
+## tip: reduce the size of the points and zoom in on the map.
+### it is possible to see the difference in points between this and the previous map.
 tm_shape(ma) +
   tm_polygons() +
   tm_shape(necto_occ_data_sptlim_bias %>%
@@ -99,12 +99,12 @@ tm_shape(ma) +
                     .summary == TRUE)) +
   tm_dots(size = .1, shape = 21, col = "turquoise")
 
-# Distancia minima entre os pontos ----
+# Minimum distance between points ----
 filter_thin <- spThin::thin(loc.data = necto_occ_data_sptlim_bias,
                             lat.col = "latitude",
                             long.col = "longitude",
                             spec.col = "species",
-                            thin.par = 5, # tem que justificar - unidade = km
+                            thin.par = 5, # must be justified - unit = km
                             reps = 1,
                             write.files = FALSE,
                             write.log.file = FALSE,
@@ -116,7 +116,7 @@ filter_thin <- spThin::thin(loc.data = necto_occ_data_sptlim_bias,
   dplyr::mutate(sptdist_filter = TRUE)
 filter_thin
 
-# Juntar os filtros
+# Combining filters
 necto_occ_data_sptlim_bias_sptdist <- dplyr::left_join(
   x = necto_occ_data_sptlim_bias,
   y = filter_thin,
@@ -134,31 +134,31 @@ tm_shape(ma) +
                     .summary == TRUE)) +
   tm_dots(size = .1, shape = 21, col = "turquoise")
 
-# Aplicar todos os filtros ----
-## aqui e criada uma nova tabela, sem as occs que caem em algum filtro
+# Applying all filters ----
+## here a new table is created, without the occurrences that fall into any filter
 necto_occ_data_filter <- necto_occ_data_sptlim_bias_sptdist %>%
   filter(sptlim_filter == TRUE,
          distlim_filter == TRUE,
          sptdist_filter == TRUE,
          .summary == TRUE) %>%
-  dplyr::select(species, longitude, latitude) #essa linha seleciona quais cols ficam
+  dplyr::select(species, longitude, latitude) #this line selects which columns remain
 necto_occ_data_filter
 
 mapview::mapview(necto_occ_data_filter)
 
 # manual editing ----
-#necto_occ_data_filter_edit <- mapedit::editFeatures(necto_occ_data_filter) # atencao para o Done!
+#necto_occ_data_filter_edit <- mapedit::editFeatures(necto_occ_data_filter) # attention to the Done!
 necto_occ_data_filter_edit <- necto_occ_data_filter
 
-# verificar
+# check
 mapview::mapview(necto_occ_data_filter_edit)
 
 # export ----
-# vetor
+# vector
 necto_occ_data_filter_edit %>%
   sf::st_write("data/occs/necto.shp", append=F)
 
-# tabela
+# table
 necto_occ_data_filter_edit %>%
   sf::st_drop_geometry() %>%
   readr::write_csv("data/occs/necto_filtrado.csv")
