@@ -1,5 +1,5 @@
 # roving-rodents
- Iuri Amaral - Data from my Master's thesis' analysis <br />
+ Data from my Master's thesis' analysis <br />
  <br />
  "Global climate change and sigmodontine rodents in the Atlantic Forest" <br />
  2023-2025 <br />
