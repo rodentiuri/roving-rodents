@@ -1,0 +1,26 @@
+{
+    "id": "B3803903",
+    "path": "~/Mestrado/Analises/roving-rodents/scripts/0_beginnings.R",
+    "project_path": "scripts/0_beginnings.R",
+    "type": "r_source",
+    "hash": "3162469912",
+    "contents": "",
+    "dirty": false,
+    "created": 1717008907878.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "31,1",
+        "scrollLine": "12"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1717010660,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1717010660,
+    "read_only": false,
+    "read_only_alternatives": []
+}
