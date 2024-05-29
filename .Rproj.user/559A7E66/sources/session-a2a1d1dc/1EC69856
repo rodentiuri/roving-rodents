@@ -3,7 +3,7 @@
     "path": "~/Mestrado/Analises/roving-rodents/scripts/2_environmental_vars.R",
     "project_path": "scripts/2_environmental_vars.R",
     "type": "r_source",
-    "hash": "69043725",
+    "hash": "398384746",
     "contents": "",
     "dirty": false,
     "created": 1717013199604.0,
@@ -13,15 +13,15 @@
         "tempName": "Untitled1",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "9,33",
-        "scrollLine": "3"
+        "cursorPosition": "3,0",
+        "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1717013869,
+    "lastKnownWriteTime": 1717016383,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1717013869889,
+    "last_content_update": 1717016383817,
     "read_only": false,
     "read_only_alternatives": []
 }

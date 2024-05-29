@@ -1,29 +1,13 @@
 #2. Variaveis ----
 
-# PASSOS JA CONCLUIDOS ----
-
-# Download
-download.file(url = "https://biogeo.ucdavis.edu/data/worldclim/v2.1/base/wc2.1_30s_bio.zip",
-              destfile = "data/vars/wc2.1_30s_bio.zip", mode = "wb")
-# Extracao
-unzip(zipfile = "data/vars/wc2.1_30s_bio.zip",
-      exdir = "data/vars/00_raw")
-
-# Importacao
-env <- dir(path = "data/vars/00_raw", pattern = ".tif$", full.names = TRUE) %>%
-  raster::stack() %>%
-  raster::brick()
-
-# Conferir as variaveis importadas
-env
+# Baixar
+env <- geodata::worldclim_global(var = "bio", res = 10, path = "data/vars/00_raw")
 
 # Renomear
-names(env)
-names(env) <- c("bio01", paste0("bio", 10:19), paste0("bio0", 2:9))
-names(env)
+names(env) <-  c("bio01", paste0("bio", 10:19), paste0("bio0", 2:9))
 env
 
-# Plot da variavel bio01 para conferir se estah ok
+# Plot da variavel bio01 para conferir se está ok
 plot(env$bio01)
 
 # Tamanho e resolucao ----
@@ -32,13 +16,12 @@ env_ma <- env %>%
   raster::crop(ma) %>%
   raster::mask(ma) #%>%
 #  raster::aggregate(fact = .5/res(env)[1]) # dimuindo a resolucao para visualizar
-env_ma
+plot(env_ma)
 
 # Salvando o raster cortado para a MA
-writeRaster(env_ma, "env_ma.tif", format='GTiff', overwrite=T) # corrigir depois
+#writeRaster(env_ma, "env_ma.tif", format='GTiff', overwrite=T) # corrigir depois
 
-###### COMECAR AQUI ----
-# Importar o raster jah recortado
+# Importar o raster ja recortado
 
 env_ma <- dir(path = "data/vars/ma_cut", pattern = ".tif$", full.names = TRUE) %>%
   raster::stack() %>%

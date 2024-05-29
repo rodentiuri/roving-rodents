@@ -1,6 +1,7 @@
 #0. PREPARACAO -------------------------------------------------------------
 # Chamar (e obter se necessario) os pacotes utilizados
 if(!require(tidyverse)) install.packages("tidyverse") # tratamento de dados
+if(!require(geodata)) install.packages("geodata")
 if(!require(rnaturalearth)) install.packages("rnaturalearth") # limites
 if(!require(rnaturalearthdata)) install.packages("rnaturalearthdata") # limites
 if(!require(nngeo)) install.packages("nngeo") # limites
@@ -30,7 +31,7 @@ dir.create("scripts")
 dir.create("output")
 
 # Importar limites da Mata Atlantica ----
-ma <- read_sf(dsn = "/shapes/morrone_atlantic_florest.shp", layer = "morrone_atlantic_florest")
+ma <- read_sf(dsn = "data/shapes/morrone_atlantic_florest.shp", layer = "morrone_atlantic_florest")
 ma
 tm_shape(ma) +
   tm_polygons()
