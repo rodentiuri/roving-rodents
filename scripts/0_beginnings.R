@@ -23,13 +23,13 @@ options(timeout = 1e5) # increases the timeout to prevent heavy operations from 
 options(scipen = 50) # threshold for scientific notation
 library(beepr) # sound alert for the end of long operations
 
-# Directories
-dir.create("data")
-dir.create("data/occs")
-dir.create("data/vars")
-dir.create("data/shapes")
-dir.create("scripts")
-dir.create("output")
+# Directories - run only in 1st time
+#dir.create("data")
+#dir.create("data/occs")
+#dir.create("data/vars")
+#dir.create("data/shapes")
+#dir.create("scripts")
+#dir.create("output")
 
 # Import Atlantic Forest boundaries ----
 ma <- read_sf(dsn = "data/shapes/morrone_atlantic_florest.shp", layer = "morrone_atlantic_florest")
